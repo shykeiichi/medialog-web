@@ -1,1 +1,1 @@
-export let api_ip = "asd"
+export let api_ip = "asdads"
