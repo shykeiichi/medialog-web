@@ -17,8 +17,22 @@
     $: editMediaOverlayStatus = "";
     let editMediaOverlayDisplayName = ""; 
 
+    let editSeasonsOverlayCategory = "";
+    let editSeasonsOverlayName = "";
+    let editSeasonsOverlaySelectedSeason = "";
+
     let hideUnwatched = false;
     let hideWatched = false;
+
+    function getFirstSeason(category, name) {
+        Object.keys(data[category][name]).forEach((item) => {
+            if(item != "status" && item != "disname") {
+                console.log(item)
+                return item
+            }
+        });
+        return "";
+    }
 
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
@@ -45,7 +59,9 @@
                 "category": addMediaOverlayCategory
             })
         });
-        json = await response.json();
+        overlayMode = ""
+        isOverlayOpen = false
+        let json = await response.json();
         console.log(json);
 
         fetchData();
@@ -62,7 +78,9 @@
                 "category": addMediaOverlayCategory,
             })
         });
-        json = await response.json();
+        overlayMode = ""
+        isOverlayOpen = false
+        let json = await response.json();
         console.log(json);
 
         fetchData();
@@ -81,7 +99,9 @@
                 "status": editMediaOverlayStatus
             })
         });
-        json = await response.json();
+        overlayMode = ""
+        isOverlayOpen = false
+        let json = await response.json();
         console.log(json);
 
         fetchData();
@@ -138,7 +158,7 @@
             <div id="overlay-content">
                 <div id="overlay-close-button" on:click={() => {isOverlayOpen = false; addMediaOverlayError = ""; addMediaOverlayCategory = ""; addMediaOverlayName = ""}}>&times;</div>
                 <div style="max-width: 480px;">
-                    Are you sure you want to delete {data[addMediaOverlayCategory][addMediaOverlayName]["disname"]} from {addMediaOverlayCategory}?
+                    Are you sure you want to delete {addMediaOverlayName} from {addMediaOverlayCategory}?
                 </div>
                 <div id="overlay-add-button-form">
                     <button on:click={() => sendRemoveMedia()}>
@@ -161,7 +181,7 @@
                     <input placeholder="Display Name" bind:value={editMediaOverlayDisplayName}/>
                     <div style="display: flex; flex-direction: row; gap: 13px; margin-bottom: 10px">
                         {#each ["planned", "watching", "completed", "paused", "dropped"] as status}
-                            {#if status != data[editMediaOverlayCategory][editMediaOverlayName]["status"]}
+                            {#if status != editMediaOverlayStatus}
                                 <div id="edit-status" on:click={() => {editMediaOverlayStatus = status}}>
                                     {capitalizeFirstLetter(status)}
                                 </div>
@@ -172,7 +192,50 @@
                             {/if}
                         {/each}
                     </div>
-                    <button on:click={() => sendEditMedia()}>
+                    <button on:click={() => {sendEditMedia()}}>
+                        Edit
+                    </button>
+                    <div id="overlay-error">
+                        {editMediaOverlayError}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {:else if overlayMode == "seasons"}
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-close-button" on:click={() => {isOverlayOpen = false; editMediaOverlayError = ""; editMediaOverlayCategory = ""; editMediaOverlayName = ""}}>&times;</div>
+                <div style="max-width: 480px; display: flex; flex-direction: row; gap: 13px; margin-bottom: 10px">
+                    {#each Object.keys(data[editSeasonsOverlayCategory][editSeasonsOverlayName]) as season}
+                        {#if !(season == "disname" || season == "status")}
+                            {#if season == editSeasonsOverlaySelectedSeason}
+                                <div id="edit-status-selected">
+                                    {season}
+                                </div>
+                            {:else}
+                                <div id="edit-status">
+                                    {season}
+                                </div>
+                            {/if}
+                        {/if}
+                    {/each}
+                </div>
+                <div id="overlay-add-button-form">
+                    <input placeholder="Display Name" bind:value={editMediaOverlayDisplayName}/>
+                    <div style="display: flex; flex-direction: row; gap: 13px; margin-bottom: 10px">
+                        {#each ["planned", "watching", "completed", "paused", "dropped"] as status}
+                            {#if status != editMediaOverlayStatus}
+                                <div id="edit-status" on:click={() => {editMediaOverlayStatus = status}}>
+                                    {capitalizeFirstLetter(status)}
+                                </div>
+                            {:else}
+                                <div id="edit-status-selected">
+                                    {capitalizeFirstLetter(status)}
+                                </div>
+                            {/if}
+                        {/each}
+                    </div>
+                    <button on:click={() => {sendEditMedia()}}>
                         Edit
                     </button>
                     <div id="overlay-error">
@@ -191,29 +254,31 @@
                 <div id="category-title">
                     <h1>{capitalizeFirstLetter(category)}</h1>
                 </div>
-                {#each Object.keys(data[category]) as media}
-                    {#if !(hideUnwatched && getAverageRating(category, media) == 0)}
-                        {#if !(hideWatched && getAverageRating(category, media) != 0)}
-                            <div id="media">
-                                <div id="media-delete-button" on:click={() => {isOverlayOpen = true; overlayMode = "remove"; addMediaOverlayCategory = category; addMediaOverlayName = media}}>
-                                    <i class="gg-trash"></i>
-                                </div>   
-                                <div id="media-delete-button" style="margin-top: 20px" on:click={() => {isOverlayOpen = true; overlayMode = "edit"; editMediaOverlayCategory = category; editMediaOverlayName = media; editMediaOverlayStatus = data[category][media]["status"]; editMediaOverlayDisplayName = data[category][media]["disname"]}}>
-                                    <i class="gg-pen"></i>
-                                </div>
-                                
-                                <div id="media-contents">
-                                    {data[category][media]["disname"]} <br/>
-                                </div>
-                                <div id="media-rating-box">
-                                    <div id="media-rating">
-                                        {getAverageRating(category, media)}
+                <div id="media-container">
+                    {#each Object.keys(data[category]) as media}
+                        {#if !(hideUnwatched && getAverageRating(category, media) == 0)}
+                            {#if !(hideWatched && getAverageRating(category, media) != 0)}
+                                <div id="media">
+                                    <div id="media-delete-button" on:click={() => {isOverlayOpen = true; overlayMode = "remove"; addMediaOverlayCategory = category; addMediaOverlayName = media}}>
+                                        <i class="gg-trash"></i>
+                                    </div>   
+                                    <div id="media-delete-button" style="margin-top: 20px" on:click={() => {isOverlayOpen = true; overlayMode = "edit"; editMediaOverlayCategory = category; editMediaOverlayName = media; editMediaOverlayStatus = data[category][media]["status"]; editMediaOverlayDisplayName = data[category][media]["disname"]}}>
+                                        <i class="gg-pen"></i>
+                                    </div>
+                                    
+                                    <div id="media-contents" on:click={() => {isOverlayOpen = true; overlayMode = "seasons"; editSeasonsOverlayName = media; editSeasonsOverlayCategory = category; editSeasonsOverlaySelectedSeason = getFirstSeason(category, media)}}>
+                                        {data[category][media]["disname"]} <br/>
+                                    </div>
+                                    <div id="media-rating-box">
+                                        <div id="media-rating">
+                                            {getAverageRating(category, media)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {/if}
                         {/if}
-                    {/if}
-                {/each}
+                    {/each}
+                </div>
                 <button id="add-button" on:click={() => {isOverlayOpen = true;  addMediaOverlayCategory = category; ; overlayMode = "add"}}>
                     <div id="add-button-contents">
                         Add {category}
@@ -243,6 +308,13 @@
 @import url('https://css.gg/trash.css');
 @import url('https://css.gg/pen.css');
 
+    #media-container {
+        overflow-y: scroll;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
     
     #config {
         width: 290px;
@@ -381,7 +453,7 @@
         margin-left: auto;
         margin-right: auto;
         width: 250px;
-        min-height: 100px;
+        height: max-content;
         border: 2px solid #E9E8EC;
         border-radius: 10px;
         background-color: white;
