@@ -172,7 +172,7 @@
                             {/if}
                         {/each}
                     </div>
-                    <button on:click={() => sendRemoveMedia()}>
+                    <button on:click={() => sendEditMedia()}>
                         Edit
                     </button>
                     <div id="overlay-error">
