@@ -17,6 +17,9 @@
     $: editMediaOverlayStatus = "";
     let editMediaOverlayDisplayName = ""; 
 
+    let hideUnwatched = false;
+    let hideWatched = false;
+
     function capitalizeFirstLetter(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
@@ -189,23 +192,27 @@
                     <h1>{capitalizeFirstLetter(category)}</h1>
                 </div>
                 {#each Object.keys(data[category]) as media}
-                    <div id="media">
-                        <div id="media-delete-button" on:click={() => {isOverlayOpen = true; overlayMode = "remove"; addMediaOverlayCategory = category; addMediaOverlayName = media}}>
-                            <i class="gg-trash"></i>
-                        </div>   
-                        <div id="media-delete-button" style="margin-top: 20px" on:click={() => {isOverlayOpen = true; overlayMode = "edit"; editMediaOverlayCategory = category; editMediaOverlayName = media; editMediaOverlayStatus = data[category][media]["status"]; editMediaOverlayDisplayName = data[category][media]["disname"]}}>
-                            <i class="gg-pen"></i>
-                        </div>
-                        
-                        <div id="media-contents">
-                            {data[category][media]["disname"]} <br/>
-                        </div>
-                        <div id="media-rating-box">
-                            <div id="media-rating">
-                                {getAverageRating(category, media)}
+                    {#if !(hideUnwatched && getAverageRating(category, media) == 0)}
+                        {#if !(hideWatched && getAverageRating(category, media) != 0)}
+                            <div id="media">
+                                <div id="media-delete-button" on:click={() => {isOverlayOpen = true; overlayMode = "remove"; addMediaOverlayCategory = category; addMediaOverlayName = media}}>
+                                    <i class="gg-trash"></i>
+                                </div>   
+                                <div id="media-delete-button" style="margin-top: 20px" on:click={() => {isOverlayOpen = true; overlayMode = "edit"; editMediaOverlayCategory = category; editMediaOverlayName = media; editMediaOverlayStatus = data[category][media]["status"]; editMediaOverlayDisplayName = data[category][media]["disname"]}}>
+                                    <i class="gg-pen"></i>
+                                </div>
+                                
+                                <div id="media-contents">
+                                    {data[category][media]["disname"]} <br/>
+                                </div>
+                                <div id="media-rating-box">
+                                    <div id="media-rating">
+                                        {getAverageRating(category, media)}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        {/if}
+                    {/if}
                 {/each}
                 <button id="add-button" on:click={() => {isOverlayOpen = true;  addMediaOverlayCategory = category; ; overlayMode = "add"}}>
                     <div id="add-button-contents">
@@ -214,12 +221,46 @@
                 </button>
             </div>
         {/each}
+        <div id="config">
+            <div id="category-title">
+                <h1>Config</h1>
+            </div>
+            <div id="config-contents">
+                <span> 
+                    <input type=checkbox bind:checked={hideUnwatched}>
+                    Hide unwatched
+                </span>
+                <span> 
+                    <input type=checkbox bind:checked={hideWatched}>
+                    Hide watched
+                </span>
+            </div>
+        </div>
     </main>
 {/key}
 
 <style lang="postcss">
 @import url('https://css.gg/trash.css');
 @import url('https://css.gg/pen.css');
+
+    
+    #config {
+        width: 290px;
+        height: max-content;
+        border-radius: 10px;
+        background-color: #F6F5F8;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    #config-contents {
+        padding-left: 20px;
+        padding-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+    }
 
     #edit-status {
         background-color: white;
