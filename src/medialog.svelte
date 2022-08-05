@@ -363,7 +363,7 @@
                     <h1 style="margin-top: 0px">Editing {editSeasonsOverlaySelectedSeason} in {editSeasonsOverlayDisplayName}</h1>
                     <input placeholder="Display Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
                     <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
-                    <input placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
+                    <textarea placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
                     <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
                         <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
                         <div style="margin-top: 5px">
@@ -388,7 +388,7 @@
                     <h1>Adding season to {editSeasonsOverlayName}</h1>
                     <input placeholder="Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
                     <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
-                    <input placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
+                    <textarea placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
                     <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
                         <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
                         <div style="margin-top: 5px">
