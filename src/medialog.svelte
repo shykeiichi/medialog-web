@@ -135,7 +135,7 @@
     async function sendEditSeasonMedia() {
         editSeasonsOverlaySelectedSeason = editSeasonsOverlaySelectedSeasonDisplay.toLowerCase();
         const response = await fetch(`http://${api_ip}/api/v1/media/season`, {
-            method: "PUT",
+            method: "PATCH",
             headers: {
                 "Content-Type": 'application/json',
             },
