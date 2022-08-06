@@ -32,24 +32,24 @@
     let hideWatched = false;
 
     function getFirstSeason(category, name) {
-        let arr = Object.keys(data[category][name])
+        let arr = Object.keys(data[category][name]["seasons"])
         let returnSeason = "";
         for(var i = 0; i < arr.length; i++) {
             if(returnSeason != "") {
                 continue;
             }
 
-            if(arr[i] != "status" && arr[i] != "disname") {
-                returnSeason = arr[i]
-            }
+            returnSeason = arr[i]
         }
         return returnSeason;
     }
 
     function loadSeasonEditData(category, name, season) {
-        if(Object.keys(data[category][name]).length == 2) {
+        if(Object.keys(data[category][name]["seasons"]).length == 0) {
             return;
         }
+
+        //console.log(`c: ${category} m: ${name} s: ${season}`)
 
         editSeasonsOverlayName = name;
         editSeasonsOverlayCategory = category;
@@ -219,7 +219,7 @@
             if(data[category][media]["seasons"][item]["rating"] != NaN)
                 totalRating += data[category][media]["seasons"][item]["rating"];
             else
-            totalRating += 0;
+                totalRating += 0;
         })
         if(parseInt(totalRating / allSeasons).toString() != "NaN")
             return parseInt(totalRating / allSeasons).toString()
@@ -384,7 +384,7 @@
                     </button>
                 </div>
                 <div id="overlay-add-button-form">
-                    {#if Object.keys(data[editSeasonsOverlayCategoy][editSeasonsOverlayName]["seasons"]).length > 0}
+                    {#if Object.keys(data[editSeasonsOverlayCategory][editSeasonsOverlayName]["seasons"]).length > 0}
                         <h1 style="margin-top: 0px">Editing {editSeasonsOverlaySelectedSeason} in {editSeasonsOverlayDisplayName}</h1>
                         <input placeholder="Display Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
                         <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
