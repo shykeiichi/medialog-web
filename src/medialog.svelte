@@ -197,7 +197,7 @@
                 "season": editSeasonsOverlaySelectedSeason,
                 "studio": editSeasonsOverlayStudio,
                 "rating": editSeasonsOverlayRating,
-                "notes": editSeasonsOverlayNotes,]
+                "notes": editSeasonsOverlayNotes,
                 "disname": editSeasonsOverlaySelectedSeasonDisplay
             })
         });
@@ -214,14 +214,12 @@
     function getAverageRating(category, media) {
         let totalRating = 0;
         let allSeasons = 0;
-        Object.keys(data[category][media]).forEach((item, index) => {
-            if(item != "status" && item != "disname") {
-                allSeasons += 1;
-                if(data[category][media]["seasons"][item]["rating"] != NaN)
-                    totalRating += data[category][media]["seasons"][item]["rating"];
-                else
-                totalRating += 0;
-            }
+        Object.keys(data[category][media]["seasons"]).forEach((item, index) => {
+            allSeasons += 1;
+            if(data[category][media]["seasons"][item]["rating"] != NaN)
+                totalRating += data[category][media]["seasons"][item]["rating"];
+            else
+            totalRating += 0;
         })
         if(parseInt(totalRating / allSeasons).toString() != "NaN")
             return parseInt(totalRating / allSeasons).toString()
@@ -386,7 +384,7 @@
                     </button>
                 </div>
                 <div id="overlay-add-button-form">
-                    {#if Object.keys(data[editSeasonsOverlayCatego]y][editSeasonsOverlayName]["seasons"]).length > 0}
+                    {#if Object.keys(data[editSeasonsOverlayCategoy][editSeasonsOverlayName]["seasons"]).length > 0}
                         <h1 style="margin-top: 0px">Editing {editSeasonsOverlaySelectedSeason} in {editSeasonsOverlayDisplayName}</h1>
                         <input placeholder="Display Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
                         <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
