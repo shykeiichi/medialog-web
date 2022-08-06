@@ -26,6 +26,7 @@
     let editSeasonsOverlayDisplayName = "";
     let editSeasonsOverlayNotes = "";
 
+    let deleteSeasonCheck = false;
 
     let hideUnwatched = false;
     let hideWatched = false;
@@ -46,17 +47,21 @@
     }
 
     function loadSeasonEditData(category, name, season) {
+        if(Object.keys(data[category][name]).length == 2) {
+            return;
+        }
+
         editSeasonsOverlayName = name;
         editSeasonsOverlayCategory = category;
         editSeasonsOverlaySelectedSeason = season;
-        editSeasonsOverlaySelectedSeasonDisplay = data[category][name][season]["disname"]
+        editSeasonsOverlaySelectedSeasonDisplay = data[category][name]["seasons"][season]["disname"]
         editSeasonsOverlayDisplayName = data[category][name]["disname"]
         if(editSeasonsOverlayDisplayName == "") {
             editSeasonsOverlayDisplayName = capitalizeFirstLetter(season)
         }
-        editSeasonsOverlayNotes = data[category][name][season]["notes"]
-        editSeasonsOverlayRating = parseInt(data[category][name][season]["rating"])
-        editSeasonsOverlayStudio = data[category][name][season]["studio"]
+        editSeasonsOverlayNotes = data[category][name]["seasons"][season]["notes"]
+        editSeasonsOverlayRating = parseInt(data[category][name]["seasons"][season]["rating"])
+        editSeasonsOverlayStudio = data[category][name]["seasons"][season]["studio"]
     }
 
     function capitalizeFirstLetter(string) {
@@ -157,9 +162,32 @@
         fetchData();
     }
 
-    async function sendAddSeasonMedia() {
+    async function sendRemoveSeasonMedia() {
+        editSeasonsOverlaySelectedSeason = editSeasonsOverlaySelectedSeasonDisplay.toLowerCase();
         const response = await fetch(`http://${api_ip}/api/v1/media/season`, {
-            method: "PATCH",
+            method: "DELETE",
+            headers: {
+                "Content-Type": 'application/json',
+            },
+            body: JSON.stringify({
+                "media": editSeasonsOverlayName,
+                "category": editSeasonsOverlayCategory,
+                "season": editSeasonsOverlaySelectedSeason
+            })
+        })
+        overlayMode = "";
+        isOverlayOpen = false;
+        let json = await response.json();
+        console.log(json);
+
+        fetchData();
+    }
+
+    async function sendAddSeasonMedia() {
+        editSeasonsOverlaySelectedSeason = editSeasonsOverlaySelectedSeasonDisplay.toLowerCase()
+
+        const response = await fetch(`http://${api_ip}/api/v1/media/season`, {
+            method: "PUT",
             headers: {
                 "Content-Type": 'application/json',
             },
@@ -169,20 +197,18 @@
                 "season": editSeasonsOverlaySelectedSeason,
                 "studio": editSeasonsOverlayStudio,
                 "rating": editSeasonsOverlayRating,
-                "notes": editSeasonsOverlayNotes,
+                "notes": editSeasonsOverlayNotes,]
                 "disname": editSeasonsOverlaySelectedSeasonDisplay
             })
         });
         overlayMode = "seasons"
         isOverlayOpen = true
 
-        loadSeasonEditData();
-
         let json = await response.json();
         console.log(json);
 
         fetchData();
-
+        loadSeasonEditData(editSeasonsOverlayCategory, editSeasonsOverlayName, editSeasonsOverlaySelectedSeason);
     }
 
     function getAverageRating(category, media) {
@@ -191,8 +217,8 @@
         Object.keys(data[category][media]).forEach((item, index) => {
             if(item != "status" && item != "disname") {
                 allSeasons += 1;
-                if(data[category][media][item]["rating"] != NaN)
-                    totalRating += data[category][media][item]["rating"];
+                if(data[category][media]["seasons"][item]["rating"] != NaN)
+                    totalRating += data[category][media]["seasons"][item]["rating"];
                 else
                 totalRating += 0;
             }
@@ -329,7 +355,7 @@
                         {/each}
                     </div>
                     <button on:click={() => {sendEditMedia()}}>
-                        Edit
+                        Save
                     </button>
                     <div id="overlay-error">
                         {editMediaOverlayError}
@@ -342,7 +368,7 @@
             <div id="overlay-content">
                 <div id="overlay-close-button" on:click={() => {isOverlayOpen = false; editMediaOverlayError = ""; editMediaOverlayCategory = ""; editMediaOverlayName = ""}}>&times;</div>
                 <div style="max-width: 520px; display: flex; flex-direction: row; gap: 13px; margin-bottom: 10px; flex-wrap: wrap">
-                    {#each Object.keys(data[editSeasonsOverlayCategory][editSeasonsOverlayName]) as season}
+                    {#each Object.keys(data[editSeasonsOverlayCategory][editSeasonsOverlayName]["seasons"]) as season}
                         {#if !(season == "disname" || season == "status")}
                             {#if season == editSeasonsOverlaySelectedSeason}
                                 <div id="edit-status-selected">
@@ -360,25 +386,40 @@
                     </button>
                 </div>
                 <div id="overlay-add-button-form">
-                    <h1 style="margin-top: 0px">Editing {editSeasonsOverlaySelectedSeason} in {editSeasonsOverlayDisplayName}</h1>
-                    <input placeholder="Display Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
-                    <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
-                    <textarea rows="5" placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
-                    <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
-                        <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
-                        <div style="margin-top: 5px">
-                            {editSeasonsOverlayRating}
+                    {#if Object.keys(data[editSeasonsOverlayCatego]y][editSeasonsOverlayName]["seasons"]).length > 0}
+                        <h1 style="margin-top: 0px">Editing {editSeasonsOverlaySelectedSeason} in {editSeasonsOverlayDisplayName}</h1>
+                        <input placeholder="Display Name" bind:value={editSeasonsOverlaySelectedSeasonDisplay}/>
+                        <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
+                        <textarea rows="5" placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
+                        <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
+                            <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
+                            <div style="margin-top: 5px">
+                                {editSeasonsOverlayRating}
+                            </div>
                         </div>
-                    </div>    
-                    <button on:click={() => {sendEditSeasonMedia()}}>
-                        Edit
-                    </button>
+                        <div style="display: flex; flex-direction: row; gap: 10px">
+                            <button on:click={() => {sendEditSeasonMedia()}} style="width: 100%">
+                                Save
+                            </button>
+                            {#if !deleteSeasonCheck}
+                                <button style="width: 100%" on:click={() => {deleteSeasonCheck = true}}>
+                                    Delete
+                                </button>
+                            {:else}
+                                <button style="width: 100%" on:click={() => {sendRemoveSeasonMedia(); deleteSeasonCheck = false}}>
+                                    Confirm Deletion
+                                </button>
+                            {/if}
+                        </div>
+                    {:else}
+                        No season exists
+                    {/if}
+                    </div>
                     <div id="overlay-error">
                         {editMediaOverlayError}
                     </div>
                 </div>
             </div>
-        </div>
     {:else if overlayMode == "addSeason"}
         <div id="overlay">
             <div id="overlay-content">
@@ -395,7 +436,7 @@
                             {editSeasonsOverlayRating}
                         </div>
                     </div>
-                    <button on:click={() => {sendEditSeasonMedia()}}>
+                    <button on:click={() => {sendAddSeasonMedia()}}>
                         Add
                     </button>
                     <div id="overlay-error">

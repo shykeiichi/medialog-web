@@ -1,1 +1,1 @@
-export let api_ip = "localhost:7707"
+export let api_ip = "83.209.13.121:7707"
