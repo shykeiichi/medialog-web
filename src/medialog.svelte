@@ -391,7 +391,7 @@
                         <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
                         <textarea rows="5" placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
                         <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
-                            <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
+                            <input style="width: 94%" type="range" min="0" max="100" bind:value={editSeasonsOverlayRating}/>
                             <div style="margin-top: 5px">
                                 {editSeasonsOverlayRating}
                             </div>
@@ -430,7 +430,7 @@
                     <input placeholder="Studio" bind:value={editSeasonsOverlayStudio}/>
                     <textarea rows="5" placeholder="Notes" bind:value={editSeasonsOverlayNotes}/>
                     <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px">
-                        <input style="width: 94%" type="range" min="1" max="100" bind:value={editSeasonsOverlayRating}/>
+                        <input style="width: 94%" type="range" min="0" max="100" bind:value={editSeasonsOverlayRating}/>
                         <div style="margin-top: 5px">
                             {editSeasonsOverlayRating}
                         </div>
