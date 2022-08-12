@@ -214,6 +214,9 @@
     function getAverageRating(category, media) {
         let totalRating = 0;
         let allSeasons = 0;
+        if(data[category][media]["seasons"] == undefined) {
+            return 0;
+        }
         Object.keys(data[category][media]["seasons"]).forEach((item, index) => {
             allSeasons += 1;
             if(data[category][media]["seasons"][item]["rating"] != NaN)
@@ -367,16 +370,14 @@
                 <div id="overlay-close-button" on:click={() => {isOverlayOpen = false; editMediaOverlayError = ""; editMediaOverlayCategory = ""; editMediaOverlayName = ""}}>&times;</div>
                 <div style="max-width: 520px; display: flex; flex-direction: row; gap: 13px; margin-bottom: 10px; flex-wrap: wrap">
                     {#each Object.keys(data[editSeasonsOverlayCategory][editSeasonsOverlayName]["seasons"]) as season}
-                        {#if !(season == "disname" || season == "status")}
-                            {#if season == editSeasonsOverlaySelectedSeason}
-                                <div id="edit-status-selected">
-                                    {season}
-                                </div>
-                            {:else}
-                                <div id="edit-status" on:click={() => {editSeasonsOverlaySelectedSeason = season; loadSeasonEditData(editSeasonsOverlayCategory, editSeasonsOverlayName, season)}}>
-                                    {season}
-                                </div>
-                            {/if}
+                        {#if season == editSeasonsOverlaySelectedSeason}
+                            <div id="edit-status-selected">
+                                {season}
+                            </div>
+                        {:else}
+                            <div id="edit-status" on:click={() => {editSeasonsOverlaySelectedSeason = season; loadSeasonEditData(editSeasonsOverlayCategory, editSeasonsOverlayName, season)}}>
+                                {season}
+                            </div>
                         {/if}
                     {/each}
                     <button on:click={() => {overlayMode = "addSeason"; editSeasonsOverlaySelectedSeasonDisplay = ""; editSeasonsOverlayStudio = ""; editSeasonsOverlayRating = 0; editSeasonsOverlayNotes = ""}}>
