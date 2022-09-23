@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import { get } from "svelte/store";
 	import data from "./Data.json"
 
@@ -55,38 +56,62 @@
 	}
 
 
-	function getVals(){
-		// Get slider values
-		var parent = this.parentNode;
-		var slides = parent.getElementsByTagName("input");
-		var slide1 = parseFloat( slides[0].value );
-		var slide2 = parseFloat( slides[1].value );
-		// Neither slider will clip the other, so make sure we determine which is larger
-		if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
-		
-		var displayElement = parent.getElementsByClassName("rangeValues")[0];
-			displayElement.innerHTML = slide1 + " - " + slide2;
-	}
+	// function getVals(){
+	// 	// Get slider values
+	// 	var parent = this.parentNode;
+	// 	var slides = parent.getElementsByTagName("input");
+	// 	var slide1 = parseFloat( slides[0].value );
+	// 	var slide2 = parseFloat( slides[1].value );
+	// 	// Neither slider will clip the other, so make sure we determine which is larger
+	// 	if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
 
-	window.onload = function(){
-		// Initialize Sliders
-		var sliderSections = document.getElementsByClassName("range-slider");
-			for( var x = 0; x < sliderSections.length; x++ ){
-				var sliders = sliderSections[x].getElementsByTagName("input");
-				for( var y = 0; y < sliders.length; y++ ){
-					if( sliders[y].type ==="range" ){
-						sliders[y].oninput = getVals;
-						// Manually trigger event first time to display values
-						sliders[y].oninput();
-					}
-				}
-			}
-	}
+	// 	return [slide1, slide2]
+	// }
 
+	// window.onload = function(){
+	// 	// Initialize Sliders
+	// 	var sliderSections = document.getElementsByClassName("range-slider");
+	// 		for( var x = 0; x < sliderSections.length; x++ ){
+	// 			var sliders = sliderSections[x].getElementsByTagName("input");
+	// 			for( var y = 0; y < sliders.length; y++ ){
+	// 				if( sliders[y].type ==="range" ){
+	// 					sliders[y].oninput = getVals;
+	// 					// Manually trigger event first time to display values
+	// 					sliders[y].oninput();
+	// 				}
+	// 			}
+	// 		}
+	// }
+
+	let FilterName = "";
 	let FilterFormat = [];
 	let FilterStatus = "";
 	let FilterRatingMin = 0;
 	let FilterRatingMax = 100;
+
+	function updateLocalStorage() {
+		localStorage.setItem("filter", JSON.stringify({
+			"name": FilterName,
+			"format": FilterFormat,
+			"status": FilterStatus,
+			"ratingmin": FilterRatingMin,
+			"ratingmax": FilterRatingMax
+		}))
+	}
+
+	function pullLocalStorage() {
+		filterstorage = JSON.parse(localStorage.getItem("filter"))
+	
+		FilterName = filterstorage["name"];
+		FilterFormat = filterstorage["format"];
+		FilterStatus = filterstorage["status"];
+		FilterRatingMin = filterstorage["ratingmin"];
+		FilterRatingMax = filterstorage["ratingmax"];
+	}
+
+	onMount(() => {
+		pullLocalStorage();
+	});
 
 	let PickGetRandom = "Get Random";
 </script>
@@ -95,29 +120,41 @@
 	<div class="MediaHeader">
 		Pick
 	</div>
-	<button on:click={() => {PickGetRandom = getRanomUnwatched()}}> 
-		{PickGetRandom}
-	</button>
+	<div class="FilterBox">
+		<button on:click={() => {PickGetRandom = getRanomUnwatched()}}> 
+			{PickGetRandom}
+		</button>
+	</div>
 	<div class="MediaHeader">
 		Filter
 	</div>
-	<select bind:value={FilterFormat} multiple>
-		{#each categories as category}
-			<option value={category}>{capitalizeFirstLetter(category)}</option>
-		{/each}
-	</select>
-	<select bind:value={FilterStatus} multiple>
-		{#each statuses as status}
-			<option value={status}>{capitalizeFirstLetter(status)}</option>
-		{/each}
-	</select>
-
-	Rating
-	<section class="range-slider">
-		<span class="rangeValues"></span>
-		<input bind:value={FilterRatingMin} min="0" max="100" step="1" type="range">
-		<input bind:value={FilterRatingMax} min="0" max="100" step="1" type="range">
-	</section>
+	<div class="FilterBox">
+		Name
+		<input bind:value={FilterName} placeholder="Name" />
+		Category
+		<select bind:value={FilterFormat} on:change={() => updateLocalStorage()} multiple>
+			{#each categories as category}
+				<option value={category}>{capitalizeFirstLetter(category)}</option>
+			{/each}
+		</select>
+		Status
+		<select bind:value={FilterStatus} on:change={() => updateLocalStorage()} multiple>
+			{#each statuses as status}
+				<option value={status}>{capitalizeFirstLetter(status)}</option>
+			{/each}
+		</select>
+		Rating {FilterRatingMin}-{FilterRatingMax}
+		<section class="range-slider">
+			<span class="rangeValues"></span>
+			<input bind:value={FilterRatingMin} on:change={() => {updateLocalStorage(); FilterRatingMin = FilterRatingMin > FilterRatingMax ? FilterRatingMax : FilterRatingMin}} min="0" max="100" step="1" type="range">
+			<input bind:value={FilterRatingMax} on:change={() => {updateLocalStorage(); FilterRatingMax = FilterRatingMax < FilterRatingMin ? FilterRatingMin : FilterRatingMax}} min="0" max="100" step="1" type="range">
+		</section>
+		<button on:click={() => {
+			FilterFormat = [];
+			FilterName = "";
+			FilterStatus = "";
+		}} on:change={() => updateLocalStorage()}>Clear Filter</button>
+	</div>
 </div>
 <div class="App">
 	{#each statuses as status}
@@ -148,8 +185,8 @@
 					{#each Object.keys(data) as category}
 						{#each Object.keys(data[category]) as media}
 							{#each Object.keys(data[category][media]["seasons"]) as season}
-								{#if data[category][media]["status"] == status}
-									{#if containsAnyFromArray(category, FilterFormat) && data[category][media]["seasons"][season]["rating"] > FilterRatingMin && data[category][media]["seasons"][season]["rating"] < FilterRatingMax}
+								{#if data[category][media]["status"] == status && `${media.toLowerCase()} `.includes(FilterName.toLowerCase())}
+									{#if containsAnyFromArray(category, FilterFormat) && data[category][media]["seasons"][season]["rating"] >= FilterRatingMin && data[category][media]["seasons"][season]["rating"] <= FilterRatingMax}
 										<tr id="MediaItem">
 											<td id="MediaItemIcon" >
 												<img id="MediaItemIconImg" src="./coverimages/{category}/{media} {season}.jpg" alt="cover" onerror="this.onerror=null; this.src='Default.png'">
@@ -199,8 +236,19 @@
 	position: absolute;
 	top: 20px;
 	left: 20px;
+}
+
+.FilterBox {
+	background-color: white;
+	border-radius: 5px;
+	padding: 10px;
+	filter: drop-shadow(0px 0px 5px rgb(223, 223, 223));
+	font-size: 16px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 	display: flex;
 	flex-direction: column;
+	gap: 5px;
 }
 
 .App {
