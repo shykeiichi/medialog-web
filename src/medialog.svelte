@@ -218,7 +218,8 @@
             return 0;
         }
         Object.keys(data[category][media]["seasons"]).forEach((item, index) => {
-            allSeasons += 1;
+            if(data[category][media]["seasons"][item]["rating"] != 0)
+                allSeasons += 1;
             if(data[category][media]["seasons"][item]["rating"] != NaN)
                 totalRating += data[category][media]["seasons"][item]["rating"];
             else
