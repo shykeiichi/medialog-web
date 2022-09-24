@@ -10,12 +10,12 @@
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-	function cutOffString(string) {
-		if(string.length <= 15) {
+	function cutOffString(string, length=15) {
+		if(string.length <= length) {
 			return string;
 		}
 		
-		return string.slice(0, 13) + "...";
+		return string.slice(0, length - 2) + "...";
 	}
 
 	function containsAnyFromArray(string, array) {
@@ -89,6 +89,8 @@
 	let FilterRatingMin = 0;
 	let FilterRatingMax = 100;
 
+	let FilterShow = false;
+
 	function updateLocalStorage() {
 		localStorage.setItem("filter", JSON.stringify({
 			"name": FilterName,
@@ -100,7 +102,7 @@
 	}
 
 	function pullLocalStorage() {
-		filterstorage = JSON.parse(localStorage.getItem("filter"))
+		let filterstorage = JSON.parse(localStorage.getItem("filter"))
 	
 		FilterName = filterstorage["name"];
 		FilterFormat = filterstorage["format"];
@@ -114,59 +116,86 @@
 	});
 
 	let PickGetRandom = "Get Random";
+
+
+	let MobileViewMinWidth = 820;
 </script>
 
-<div class="FilterContainer">
-	<div class="MediaHeader">
-		Pick
+<header>
+	<div id="HeaderTitle">
+		Medialog
 	</div>
-	<div class="FilterBox">
-		<button on:click={() => {PickGetRandom = getRanomUnwatched()}}> 
-			{PickGetRandom}
-		</button>
+	<div id="HeaderSpacer" />
+	{#if window.innerWidth < MobileViewMinWidth}
+		<img src="icons/search.svg" id="HeaderSearch" on:click={() => FilterShow = true} alt="Filter" />
+	{/if}
+</header>
+
+{#if FilterShow || window.innerWidth > MobileViewMinWidth}
+	<div class="FilterContainer">
+		<div class="MediaHeaderContainer">
+			<div class="MediaHeader">
+				Pick 
+			</div>
+			<div id="MediaHeaderSpacer" />
+			{#if window.innerWidth < MobileViewMinWidth}
+				<img src="icons/close.svg" id="HeaderSearch" on:click={() => FilterShow = false} alt="Close"/>
+			{/if}
+		</div>
+		<div class="FilterBox">
+			<button on:click={() => {PickGetRandom = getRanomUnwatched()}}> 
+				{PickGetRandom}
+			</button>
+		</div>
+		<div class="MediaHeaderContainer">
+			<div class="MediaHeader">
+				Filter
+			</div>
+		</div>
+		<div class="FilterBox">
+			Name
+			<input bind:value={FilterName} placeholder="Name" />
+			Category
+			<select bind:value={FilterFormat} on:change={() => updateLocalStorage()} multiple>
+				{#each categories as category}
+					<option value={category}>{capitalizeFirstLetter(category)}</option>
+				{/each}
+			</select>
+			Status
+			<select bind:value={FilterStatus} on:change={() => updateLocalStorage()} multiple>
+				{#each statuses as status}
+					<option value={status}>{capitalizeFirstLetter(status)}</option>
+				{/each}
+			</select>
+			Rating {FilterRatingMin}-{FilterRatingMax}
+			<section class="range-slider">
+				<span class="rangeValues"></span>
+				<input bind:value={FilterRatingMin} on:change={() => {updateLocalStorage(); FilterRatingMin = FilterRatingMin > FilterRatingMax ? FilterRatingMax : FilterRatingMin}} min="0" max="100" step="1" type="range">
+				<input bind:value={FilterRatingMax} on:change={() => {updateLocalStorage(); FilterRatingMax = FilterRatingMax < FilterRatingMin ? FilterRatingMin : FilterRatingMax}} min="0" max="100" step="1" type="range">
+			</section>
+			<button on:click={() => {
+				FilterFormat = [];
+				FilterName = "";
+				FilterStatus = "";
+			}} on:change={() => updateLocalStorage()}>Clear Filter</button>
+		</div>
 	</div>
-	<div class="MediaHeader">
-		Filter
-	</div>
-	<div class="FilterBox">
-		Name
-		<input bind:value={FilterName} placeholder="Name" />
-		Category
-		<select bind:value={FilterFormat} on:change={() => updateLocalStorage()} multiple>
-			{#each categories as category}
-				<option value={category}>{capitalizeFirstLetter(category)}</option>
-			{/each}
-		</select>
-		Status
-		<select bind:value={FilterStatus} on:change={() => updateLocalStorage()} multiple>
-			{#each statuses as status}
-				<option value={status}>{capitalizeFirstLetter(status)}</option>
-			{/each}
-		</select>
-		Rating {FilterRatingMin}-{FilterRatingMax}
-		<section class="range-slider">
-			<span class="rangeValues"></span>
-			<input bind:value={FilterRatingMin} on:change={() => {updateLocalStorage(); FilterRatingMin = FilterRatingMin > FilterRatingMax ? FilterRatingMax : FilterRatingMin}} min="0" max="100" step="1" type="range">
-			<input bind:value={FilterRatingMax} on:change={() => {updateLocalStorage(); FilterRatingMax = FilterRatingMax < FilterRatingMin ? FilterRatingMin : FilterRatingMax}} min="0" max="100" step="1" type="range">
-		</section>
-		<button on:click={() => {
-			FilterFormat = [];
-			FilterName = "";
-			FilterStatus = "";
-		}} on:change={() => updateLocalStorage()}>Clear Filter</button>
-	</div>
-</div>
+{/if}
 <div class="App">
 	{#each statuses as status}
 		{#if containsAnyFromArray(status, FilterStatus)}
-			<div class="MediaHeader">
-				{capitalizeFirstLetter(status)}
+			<div class="MediaHeaderContainer">
+				<div class="MediaHeader">
+					{capitalizeFirstLetter(status)}
+				</div>
 			</div>
 			<div class="MediaContainer">
 				<table>
 					<thead>
 						<tr id="MediaItem">
-							<td id="MediaItemIcon" />
+							{#if window.innerWidth > MobileViewMinWidth}
+								<td id="MediaItemIcon" />
+							{/if}
 							<td id="MediaItemTitle">
 								Title
 							</td>
@@ -187,21 +216,29 @@
 							{#each Object.keys(data[category][media]["seasons"]) as season}
 								{#if data[category][media]["status"] == status && `${media.toLowerCase()} `.includes(FilterName.toLowerCase())}
 									{#if containsAnyFromArray(category, FilterFormat) && data[category][media]["seasons"][season]["rating"] >= FilterRatingMin && data[category][media]["seasons"][season]["rating"] <= FilterRatingMax}
-										<tr id="MediaItem">
-											<td id="MediaItemIcon" >
-												<img id="MediaItemIconImg" src="./coverimages/{category}/{media} {season}.jpg" alt="cover" onerror="this.onerror=null; this.src='Default.png'">
-											</td>
+										<tr id="MediaItem" style={window.innerWidth > MobileViewMinWidth ? "" : `height: 35px`}>
+											{#if window.innerWidth > MobileViewMinWidth}
+												<td id="MediaItemIcon" >
+													<img id="MediaItemIconImg" src="./coverimages/{category}/{media} {season}.jpg" alt="cover" onerror="this.onerror=null; this.src='Default.png'">
+												</td>
+											{/if}
 											<td id="MediaItemTitle">
-												{#if Object.keys(data[category][media]["seasons"]).length == 1}
-													{data[category][media]["disname"]}
-												{:else}	
-													{data[category][media]["disname"]} <i>{capitalizeFirstLetter(season)}</i>
+												{#if window.innerWidth > MobileViewMinWidth}
+													{#if Object.keys(data[category][media]["seasons"]).length == 1}
+														{data[category][media]["disname"]}
+													{:else}	
+														{data[category][media]["disname"]} <i>{capitalizeFirstLetter(season)}</i>
+													{/if}
+												{:else}
+													<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+														{cutOffString(data[category][media]["disname"] + " " + capitalizeFirstLetter(season))}
+													</div>
 												{/if}
 											</td>
 											<td id="MediaItemMisc">
 												{data[category][media]["seasons"][season]["rating"]}
 											</td>
-											<td id="MediaItemMisc">
+											<td id="MediaItemMisc" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
 												{cutOffString(capitalizeFirstLetter(data[category][media]["seasons"][season]["studio"]))}
 											</td>
 											<td id="MediaItemMisc">
@@ -226,6 +263,37 @@
 
 <style>
 
+header {
+	height: 50px;
+	width: auto;
+	background-color: white;
+	justify-content: center;
+	display: flex;
+	flex-direction: row;
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+#HeaderTitle {
+	margin-top: auto;
+	margin-bottom: auto;
+	font-size: 22px;
+	color:slategrey;
+	font-weight:normal;
+}
+
+#HeaderSpacer {
+	width: 100%;
+	height: 50px;
+}
+
+#HeaderSearch {
+	max-width: 22px;
+	max-height: 22px;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
 .Spacer {
 	height: 200px;
 	width: 10vw;
@@ -234,7 +302,7 @@
 
 .FilterContainer {
 	position: absolute;
-	top: 20px;
+	top: 70px;
 	left: 20px;
 }
 
@@ -262,8 +330,44 @@
   gap: 10px;
 }
 
+@media only screen and (max-width: 800px) {
+	.App {
+		width: 100%;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		margin-left: 0;
+		margin-right: 0;
+		padding-top: 20px;
+		gap: 10px;
+	}
+
+  	.FilterContainer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		z-index: 1;
+		background-color: white;
+		filter: drop-shadow(0px 5px 5px rgb(223, 223, 223));
+		padding-top: 10px;
+		padding-bottom: 20px;
+	}
+}
+
+.MediaHeaderContainer {
+	display:flex;
+	flex-direction: row;
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+#MediaHeaderSpacer {
+	width: 80%;
+	height: 22px;
+}
+
 .MediaHeader {
-  padding-left: 20px;
   font-size: 22px;
   color:slategrey;
   font-weight: lighter;
@@ -273,7 +377,7 @@
   background-color: white;
   width: 100%;
   border-radius: 5px;
-  padding: 10px;
+  padding: 0px;
   filter: drop-shadow(0px 0px 5px rgb(223, 223, 223));
   font-size: 16px;
   margin-bottom: 10px;
